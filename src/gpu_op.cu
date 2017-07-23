@@ -263,20 +263,13 @@ int DLGpuMatrixMultiply(const DLArrayHandle matA, bool transposeA, const DLArray
  	const float *A_data = (const float*)matA->data;
 	const float *B_data = (const float*)matB->data;
 	float *C_data = (float*)matC->data;
-
-	int row_A = matA->shape[0], col_A = matA->shape[1]; 
-	int row_B = matB->shape[0], col_B = matB->shape[1]; 
-	int size_C = matC->shape[0] * matC->shape[1];
-
-	dim3 blocks, treads;
-	if (size_C <= 1024) { blocks.x = 1; treads.x = size_C; }
-	else { blocks.x = (size_C  + 1023) / 1024; treads.x = 1024; }
-
 	float alpha = 1.f; float beta = 0.f;
+	static cublasHandle_t handle;
+	cublasCreate(&handle);
 	int m = transposeA ? matA->shape[1] : matA->shape[0];
     int k = transposeA ? matA->shape[0] : matA->shape[1];
     int n = transposeB ? matB->shape[0] : matB->shape[1];
-    cublasSgemm(handle, transposeB ? CUBLAS_OP_T : CUBLAS_OP_N, transposeA ? CUBLAS_OP_T : CUBLAS_OP_N, n, m, k, &alpha, B, transposeB ? k : n, A, transposeA ? m : k, &beta,C, n);
+    cublasSgemm(handle, transposeB ? CUBLAS_OP_T : CUBLAS_OP_N, transposeA ? CUBLAS_OP_T : CUBLAS_OP_N, n, m, k, &alpha, B_data, transposeB ? k : n, A_data, transposeA ? m : k, &beta, C_data, n);
 
 	//matrix_multiply_kernel<<<blocks, treads>>>(A_data, row_A, col_A, transposeA, B_data, row_B, col_B, transposeB, C_data, size_C, matC->shape[0]);
   	return 0;

@@ -419,7 +419,7 @@ class ReduceSumAxisZeroOp(Op):
         e.g. (3,4,5)->(4,5)
         for vector, simpler to do (3,)->(1,)
         """
-        if (input_shapes[0][1] == None):
+        if (len(input_shapes[0]) == 1):
         	return (1,)
         else:
         	return input_shapes[0][1:];

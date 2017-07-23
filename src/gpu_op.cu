@@ -19,7 +19,7 @@ __global__ void broadcast_to_kernel(const float *input_data, float *output_data,
 __global__ void reduce_sum_axis_zero_kernel(const float *input_data, float *output_data, int num, int size_output){
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	if (i < size_output){
-		float sum = 0;
+		float sum = 0.;
 		for (int j = 0; j < num; ++i) sum += input_data[i * num + j];
 		output_data[i] = sum; 
 	}

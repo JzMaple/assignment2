@@ -84,7 +84,7 @@ __global__ void softmax_kernel(const int row, const int col, const float *input_
 	if (i >= size_output) return;
 	int xx = i / col * col;
 	float maxval = *input_data;
-	for (int x = 0; x < col; ++x) maxval = max(maxval, input_a[x + xx]);
+	for (int x = 0; x < col; ++x) maxval = max(maxval, input_data[x + xx]);
 	float sum = 0;
 	for (int x = 0; x < col; ++x) sum += exp(input_data[x + xx] - maxval);
 	output_data[i] = exp(input_data[i] - maxval) / sum;
@@ -269,8 +269,8 @@ int DLGpuMatrixMultiply(const DLArrayHandle matA, bool transposeA, const DLArray
 	int size_C = matC->shape[0] * matC->shape[1];
 
 	dim3 blocks, treads;
-	if (size_C <= 1024) { nblocks.x = 1; treads.x = size_C; }
-	else { nblocks.x = (size_C  + 1023) / 1024; treads.x = 1024; }
+	if (size_C <= 1024) { blocks.x = 1; treads.x = size_C; }
+	else { blocks.x = (size_C  + 1023) / 1024; treads.x = 1024; }
 
 	matrix_multiply_kernel<<<blocks, treads>>>(A_data, row_A, col_A, transposeA, B_data, row_B, col_B, transposeB, C_data, size_C, matC->shape[0]);
   	return 0;
@@ -289,7 +289,7 @@ int DLGpuRelu(const DLArrayHandle input, DLArrayHandle output) {
 	if (size_output <= 1024) { blocks.x = 1; treads.x = size_output; }
 	else { blocks.x = (size_output + 1023) / 1024; treads.x = 1024; }
 
-	relu_kernel<<<block, treads>>>(input->data, output->data, size_intput, size_output);
+	relu_kernel<<<blocks, treads>>>(input->data, output->data, size_input, size_output);
 	return 0;
 }
 
@@ -306,7 +306,7 @@ int DLGpuReluGradient(const DLArrayHandle input, const DLArrayHandle in_grad, DL
 	if (size_output <= 1024) { blocks.x = 1; treads.x = size_output; }
 	else { blocks.x = (size_output + 1023) / 1024; treads.x = 1024; }
 
-	relu_kernel<<<block, treads>>>(input->data, output->data, size_intput, size_output);
+	relu_kernel<<<blocks, treads>>>(input->data, output->data, size_intput, size_output);
 	return 0;
 }
 
@@ -323,7 +323,7 @@ int DLGpuSoftmax(const DLArrayHandle input, DLArrayHandle output) {
 	if (size_output <= 1024) { blocks.x = 1; treads.x = size_output; }
 	else { blocks.x = (size_output + 1023) / 1024; treads.x = 1024; }
 
-	relu_kernel<<<block, treads>>>(input->shape[0], input->shape[1] ,input->data, output->data, size_intput, size_output);
+	relu_kernel<<<blocks, treads>>>(input->shape[0], input->shape[1] ,input->data, output->data, size_intput, size_output);
 	return 0;
 }
 

@@ -16,7 +16,7 @@ __global__ void broadcast_to_kernel(const float *input_data, float *output_data,
 	if (i < size_output) output_data[i] = input_data[i % size_input];
 }
 
-__golbal__ void reduce_sum_axis_zero_kernel(const float *input_data, float *output_data, int num, int size_output){
+__global__ void reduce_sum_axis_zero_kernel(const float *input_data, float *output_data, int num, int size_output){
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	if (i < size_output){
 		float sum = 0;
@@ -72,10 +72,10 @@ __global__ void relu_kernel(const float *input_data, float *output_data, int siz
 
 __global__ void relu_gradient_kernel(const float *input_data, float *output_data, int size_input, int size_output){
 	int i= blockIdx.x * blockDim.x + threadIdx.x;
-	if (i < size_ouput){
+	if (i < size_output){
 		if (input_data[i] < 0) output_data[i] = 0;
 		if (input_data[i] == 0) output_data[i] = 0.5;
-		if (intput_data[i] > 0) output_data[i] = 1;
+		if (input_data[i] > 0) output_data[i] = 1;
 	}
 }
 
@@ -208,16 +208,16 @@ int DLGpuMatrixElementwiseAddByConst(const DLArrayHandle input, float val, DLArr
 	float *output_data = (float*)output->data;
 
 	int size_input = 1;
-	for (int i = 0; i < input->ndim; ++i) size = size * input->shape[i];
+	for (int i = 0; i < input->ndim; ++i) size_input = size_input * input->shape[i];
 	int size_output = 1;
-	for (int i = 0; i < output->ndim; ++i) size = size * output->shape[i];
+	for (int i = 0; i < output->ndim; ++i) size_output = size_output * output->shape[i];
 	assert(size_input == size_output);
 
 	dim3 blocks, treads;
 	if (size_output <= 1024) { blocks.x = 1; treads.x = size_output; }
 	else { blocks.x = (size_output + 1023) / 1024; treads.x = 1024; }
 
-	matrix_elementwise_add_by_const_kernel<<<blocks, treads>>>(input_data, value, output_data, size_output);
+	matrix_elementwise_add_by_const_kernel<<<blocks, treads>>>(input_data, val, output_data, size_output);
 	return 0;
 }
 
@@ -237,7 +237,7 @@ int DLGpuMatrixElementwiseMultiply(const DLArrayHandle matA, const DLArrayHandle
 	if (size_output <= 1024) { blocks.x = 1; treads.x = size_output; }
 	else { blocks.x = (size_output + 1023) / 1024; treads.x = 1024; }
 
-	matrix_elementwise_multipy_kernel<<<blocks, treads>>>(A_data, B_data, output_data, size_A, size_B, size_output);
+	matrix_elementwise_multiply_kernel<<<blocks, treads>>>(A_data, B_data, output_data, size_A, size_B, size_output);
 	return 0;
 }
 
@@ -246,27 +246,27 @@ int DLGpuMatrixMultiplyByConst(const DLArrayHandle input, float val, DLArrayHand
 	float *output_data = (float*)output->data;
 
 	int size_input = 1;
-	for (int i = 0; i < input->ndim; ++i) size = size * input->shape[i];
+	for (int i = 0; i < input->ndim; ++i) size_input = size_input * input->shape[i];
 	int size_output = 1;
-	for (int i = 0; i < output->ndim; ++i) size = size * output->shape[i];
+	for (int i = 0; i < output->ndim; ++i) size_output = size_output * output->shape[i];
 	assert(size_input == size_output);
 
 	dim3 blocks, treads;
 	if (size_output <= 1024) { blocks.x = 1; treads.x = size_output; }
 	else { blocks.x = (size_output + 1023) / 1024; treads.x = 1024; }
 
-	matrix_elementwise_multiply_by_const_kernel<<<blocks, treads>>>(input_data, value, output_data, size_output);
+	matrix_elementwise_multiply_by_const_kernel<<<blocks, treads>>>(input_data, val, output_data, size_output);
 	return 0;
 }
 
 int DLGpuMatrixMultiply(const DLArrayHandle matA, bool transposeA, const DLArrayHandle matB, bool transposeB, DLArrayHandle matC) {
  	const float *A_data = (const float*)matA->data;
 	const float *B_data = (const float*)matB->data;
-	float *output_data = (float*)output->data;
+	float *C_data = (float*)matC->data;
 
-	assert(len(matA->shape) == 2); int row_A = matA->shape[0], col_A = mat->shape[1]; 
-	assert(len(matB->shape) == 2); int row_B = matB->shape[0], col_B = mat->shape[1]; 
-	assert(len(matC->shape) == 2); int size_C = matC->shape[0] * matC->shape[1];
+	int row_A = matA->shape[0], col_A = matA->shape[1]; 
+	int row_B = matB->shape[0], col_B = matB->shape[1]; 
+	int size_C = matC->shape[0] * matC->shape[1];
 
 	dim3 blocks, treads;
 	if (size_C <= 1024) { nblocks.x = 1; treads.x = size_C; }

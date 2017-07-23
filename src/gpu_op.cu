@@ -289,7 +289,7 @@ int DLGpuRelu(const DLArrayHandle input, DLArrayHandle output) {
 	if (size_output <= 1024) { blocks.x = 1; treads.x = size_output; }
 	else { blocks.x = (size_output + 1023) / 1024; treads.x = 1024; }
 
-	relu_kernel<<<blocks, treads>>>(input->data, output->data, size_input, size_output);
+	relu_kernel<<<blocks, treads>>>(input_data, output_data, size_input, size_output);
 	return 0;
 }
 
@@ -306,7 +306,7 @@ int DLGpuReluGradient(const DLArrayHandle input, const DLArrayHandle in_grad, DL
 	if (size_output <= 1024) { blocks.x = 1; treads.x = size_output; }
 	else { blocks.x = (size_output + 1023) / 1024; treads.x = 1024; }
 
-	relu_gradient_kernel<<<blocks, treads>>>(input->data, output->data, size_intput, size_output);
+	relu_gradient_kernel<<<blocks, treads>>>(input_data, output_data, size_intput, size_output);
 	return 0;
 }
 
@@ -323,7 +323,9 @@ int DLGpuSoftmax(const DLArrayHandle input, DLArrayHandle output) {
 	if (size_output <= 1024) { blocks.x = 1; treads.x = size_output; }
 	else { blocks.x = (size_output + 1023) / 1024; treads.x = 1024; }
 
-	softmax_kernel<<<blocks, treads>>>(input->shape[0], input->shape[1] ,input->data, output->data, size_intput, size_output);
+	int x=input->shape[0], y=input->shape[1];
+
+	softmax_kernel<<<blocks, treads>>>(x, y ,input_data, output_data, size_intput, size_output);
 	return 0;
 }
 

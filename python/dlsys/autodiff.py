@@ -219,7 +219,7 @@ class MulOp(Op):
         	return input_shapes[1]
         elif (input_shapes[1] == (1,)): 
         	return input_shapes[0]
-        elif:
+        else:
         	assert input_shapes[0] == input_shapes[1]
         	return input_shapes[0]
 

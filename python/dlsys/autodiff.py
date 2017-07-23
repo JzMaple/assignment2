@@ -362,10 +362,7 @@ class ZerosLikeOp(Op):
 
     def infer_shape(self, node, input_shapes):
         """If input_shape is a vector, simpler to return (1,)"""
-        if (input_shapes[0][1] == 1):
-        	return (1,input_shapes[0][0])
-        else:
-        	return input_shapes[0]
+        return input_shapes[0]
 
 class OnesLikeOp(Op):
     def __call__(self, node_A):
@@ -387,10 +384,7 @@ class OnesLikeOp(Op):
 
     def infer_shape(self, node, input_shapes):
         """If input_shape is a vector, simpler to return (1,)"""
-        if (input_shapes[0][1] == None):
-        	return (1,input_shapes[0][0])
-        else:
-        	return input_shapes[0]
+        return input_shapes[0]
 
 
 class ReduceSumAxisZeroOp(Op):
@@ -448,7 +442,7 @@ class BroadcastToOp(Op):
         return [grad_A, grad_B]
 
     def infer_shape(self, node, input_shapes):
-        return input_shapes[1]
+        return broadcast_rule(input_shapes[0], input_shapes[1])
 
 
 def softmax_func(y):

@@ -20,7 +20,8 @@ __global__ void reduce_sum_axis_zero_kernel(const float *input_data, float *outp
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	if (i < size_output){
 		float sum = 0.;
-		for (int j = 0; j < num; ++i) sum += input_data[i * num + j];
+		int up = size_output * num;
+		for (int j = 0; j < up; j = j + size_output) sum += input_data[j];
 		output_data[i] = sum; 
 	}
 }

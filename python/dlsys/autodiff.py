@@ -421,7 +421,7 @@ class ReduceSumAxisZeroOp(Op):
         """
         if (input_shapes[0][1] == None):
         	return (1,)
-        else
+        else:
         	return input_shapes[0][1:];
 
 

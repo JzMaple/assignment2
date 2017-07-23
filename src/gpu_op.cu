@@ -67,7 +67,7 @@ __global__ void matrix_multiply_kernel(const float *A_data, int row_A, int col_A
 
 __global__ void relu_kernel(const float *input_data, float *output_data, int size_input, int size_output){
 	int i= blockIdx.x * blockDim.x + threadIdx.x;
-	if (i < size_output) output_data[i] = max(0, input_data[i]);
+	if (i < size_output) output_data[i] = max(0., input_data[i]);
 }
 
 __global__ void relu_gradient_kernel(const float *input_data, float *output_data, int size_input, int size_output){

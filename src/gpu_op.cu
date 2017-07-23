@@ -49,7 +49,7 @@ __global__ void matrix_elementwise_multiply_by_const_kernel(const float *input_d
 __global__ void matrix_multiply_kernel(const float *A_data, int row_A, int col_A, bool TA, const float *B_data, int row_B, int col_B, bool TB, float *C_data, int size_C, int row_C){
 	int xx = blockIdx.x * blockDim.x + threadIdx.x;
 	int i = xx / row_C, j = xx % row_C;
-	if (i < size_C){
+	if (xx < size_C){
 		int sum = 0;
 		if (TA && TB) {
 			for (int p = 0; p < col_A; ++p) sum += A_data[i * col_A + p] * B_data[p * col_B + j]; C_data[xx] = sum;
@@ -272,7 +272,13 @@ int DLGpuMatrixMultiply(const DLArrayHandle matA, bool transposeA, const DLArray
 	if (size_C <= 1024) { blocks.x = 1; treads.x = size_C; }
 	else { blocks.x = (size_C  + 1023) / 1024; treads.x = 1024; }
 
-	matrix_multiply_kernel<<<blocks, treads>>>(A_data, row_A, col_A, transposeA, B_data, row_B, col_B, transposeB, C_data, size_C, matC->shape[0]);
+	float alpha = 1.f; float beta = 0.f;
+	int m = transposeA ? matA->shape[1] : matA->shape[0];
+    int k = transposeA ? matA->shape[0] : matA->shape[1];
+    int n = transposeB ? matB->shape[0] : matB->shape[1];
+    cublasSgemm(handle, transposeB ? CUBLAS_OP_T : CUBLAS_OP_N, transposeA ? CUBLAS_OP_T : CUBLAS_OP_N, n, m, k, &alpha, B, transposeB ? k : n, A, transposeA ? m : k, &beta,C, n);
+
+	//matrix_multiply_kernel<<<blocks, treads>>>(A_data, row_A, col_A, transposeA, B_data, row_B, col_B, transposeB, C_data, size_C, matC->shape[0]);
   	return 0;
 }
 
@@ -295,7 +301,7 @@ int DLGpuRelu(const DLArrayHandle input, DLArrayHandle output) {
 
 int DLGpuReluGradient(const DLArrayHandle input, const DLArrayHandle in_grad, DLArrayHandle output) {
    	const float *input_data = (const float*)input->data;
-   	const float *input_grad = (const float*)in_gard->data;
+   	const float *input_grad = (const float*)in_grad->data;
   	float *output_data = (float*)output->data;
 
   	int size_input = 1;

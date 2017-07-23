@@ -71,12 +71,11 @@ __global__ void relu_kernel(const float *input_data, float *output_data, int siz
 	if (i < size_output) output_data[i] = max(0., input_data[i]);
 }
 
-__global__ void relu_gradient_kernel(const float *input_data, float *output_data, int size_input, int size_output){
+__global__ void relu_gradient_kernel(const float *input_data, const float *input_grad ,float *output_data, int size_input, int size_output){
 	int i= blockIdx.x * blockDim.x + threadIdx.x;
 	if (i < size_output){
-		if (input_data[i] < 0) output_data[i] = 0;
-		if (input_data[i] == 0) output_data[i] = 0.5;
-		if (input_data[i] > 0) output_data[i] = 1;
+		if (input_data[i] <= 0) output_data[i] = 0;
+		if (input_data[i] > 0) output_data[i] = input_grad[i];
 	}
 }
 
@@ -296,6 +295,7 @@ int DLGpuRelu(const DLArrayHandle input, DLArrayHandle output) {
 
 int DLGpuReluGradient(const DLArrayHandle input, const DLArrayHandle in_grad, DLArrayHandle output) {
    	const float *input_data = (const float*)input->data;
+   	const float *input_grad = (const float*)in_gard->data;
   	float *output_data = (float*)output->data;
 
   	int size_input = 1;
@@ -307,7 +307,7 @@ int DLGpuReluGradient(const DLArrayHandle input, const DLArrayHandle in_grad, DL
 	if (size_output <= 1024) { blocks.x = 1; treads.x = size_output; }
 	else { blocks.x = (size_output + 1023) / 1024; treads.x = 1024; }
 
-	relu_gradient_kernel<<<blocks, treads>>>(input_data, output_data, size_input, size_output);
+	relu_gradient_kernel<<<blocks, treads>>>(input_data, input_grad, output_data, size_input, size_output);
 	return 0;
 }
 
